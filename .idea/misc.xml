@@ -4,8 +4,11 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Android/BluetoothFinder/Application/src/main/res/layout/actionbar_indeterminate_progress.xml" value="0.4166666666666667" />
+        <entry key="..\:/Android/BluetoothFinder/Application/src/main/res/layout/activity_main.xml" value="0.3890625" />
         <entry key="..\:/Android/BluetoothFinder/Application/src/main/res/layout/gatt_services_characteristics.xml" value="0.4166666666666667" />
         <entry key="..\:/Android/BluetoothFinder/Application/src/main/res/layout/listitem_device.xml" value="0.4166666666666667" />
+        <entry key="..\:/Android/BluetoothFinder/Application/src/main/res/menu/gatt_services.xml" value="0.44114583333333335" />
+        <entry key="..\:/Android/BluetoothFinder/Application/src/main/res/menu/main.xml" value="0.44114583333333335" />
       </map>
     </option>
   </component>

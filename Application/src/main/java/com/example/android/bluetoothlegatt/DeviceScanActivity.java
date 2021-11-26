@@ -46,16 +46,16 @@ import android.util.Log;
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
 public class DeviceScanActivity extends ListActivity {
-    private LeDeviceListAdapter mLeDeviceListAdapter;
-    private BluetoothAdapter mBluetoothAdapter;
-    private boolean mScanning;
-    private Handler mHandler;
+    private LeDeviceListAdapter mLeDeviceListAdapter; // 스캔 리스트 어댑터
+    private BluetoothAdapter mBluetoothAdapter; // 블루투스 어댑터
+    private boolean mScanning; // 스캐닝 확인 값
+    private Handler mHandler; // 핸들러
 
     private static final int REQUEST_ENABLE_BT = 1;
-    // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
-    //c.s.h. 2nd
-    private static int PERMISSION_REQUEST_CODE = 1;
+
+    private static final long SCAN_PERIOD = 5000; // 스캔 주기(ms)
+
+    private static int PERMISSION_REQUEST_CODE = 1; //c.s.h. 2nd
     private final static String TAG = DeviceScanActivity.class.getSimpleName();
 
     @Override
@@ -77,25 +77,21 @@ public class DeviceScanActivity extends ListActivity {
 	
     @Override																									 
     public void onCreate(Bundle savedInstanceState) {
-        //c.s.h. 2nd
-        Log.d(TAG, "Request Location Permissions:");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
         {
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_CODE);
         }					
         super.onCreate(savedInstanceState);
-        getActionBar().setTitle(R.string.title_devices);
-        mHandler = new Handler();
+        getActionBar().setTitle(R.string.title_devices); // 액션바에 BLE Device Scan 타이틀 적용
+        mHandler = new Handler(); // 핸들러 객체 생성
 
-        // Use this check to determine whether BLE is supported on the device.  Then you can
-        // selectively disable BLE-related features.
+        // 블루투스가 BLE를 지원하는 지 검사하는 로직 (허용하지 않으면 Activity finish)
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
             finish();
         }
 
-        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
-        // BluetoothAdapter through BluetoothManager.
+        // 블루투스 어댑터 생성 (api 18 이상 가능)
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
@@ -142,14 +138,13 @@ public class DeviceScanActivity extends ListActivity {
     protected void onResume() {
         super.onResume();
 
-        // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
-        // fire an intent to display a dialog asking the user to grant permission to enable it.
+        // 블루투스가 사용가능 상태인지 체크하고 아니라면 그 기능을 키도록 함.
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-        // Initializes list view adapter.
+        // list view adapter 를 생성
         mLeDeviceListAdapter = new LeDeviceListAdapter();
         setListAdapter(mLeDeviceListAdapter);
         scanLeDevice(true);
@@ -157,8 +152,9 @@ public class DeviceScanActivity extends ListActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // User chose not to enable Bluetooth.
+        // 블루투스 사용 허용 다이얼로그 결과
         if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
+            Toast.makeText(this,"블루투스 연결 허용 안됨",Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -174,40 +170,44 @@ public class DeviceScanActivity extends ListActivity {
 
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
-        final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
+        // 각 아이템을 클릭했을 때
+        Log.d(TAG,"디바이스 선택");
+        final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position); // 해당 위치의 디바이스
         if (device == null) return;
         final Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
-        if (mScanning) {
+        if (mScanning) { // 스캔중지
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
             mScanning = false;
         }
-        startActivity(intent);
+        startActivity(intent); // DeviceControlActivity 열기
     }
 
     private void scanLeDevice(final boolean enable) {
         if (enable) {
-            // Stops scanning after a pre-defined scan period.
+            // 스캔 주기가 지나면 스캔을 그만두게 함.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     mScanning = false;
                     mBluetoothAdapter.stopLeScan(mLeScanCallback);
-                    invalidateOptionsMenu();
+                    invalidateOptionsMenu(); // onCreateOptionMenu 메소드를 다시 호출해줌.
                 }
             }, SCAN_PERIOD);
 
+            // 스캔 시작
             mScanning = true;
             mBluetoothAdapter.startLeScan(mLeScanCallback);
         } else {
+            // 스캔을 멈춤.
             mScanning = false;
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
         }
         invalidateOptionsMenu();
     }
 
-    // Adapter for holding devices found through scanning.
+    // 스캐닝을 통한 찾은 디바이스를 답을 어댑터
     private class LeDeviceListAdapter extends BaseAdapter {
         private ArrayList<BluetoothDevice> mLeDevices;
         private LayoutInflater mInflator;
@@ -248,7 +248,7 @@ public class DeviceScanActivity extends ListActivity {
         }
 
         @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
+        public View getView(int position, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
             // General ListView optimization code.
             if (view == null) {
@@ -261,7 +261,7 @@ public class DeviceScanActivity extends ListActivity {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            BluetoothDevice device = mLeDevices.get(i);
+            BluetoothDevice device = mLeDevices.get(position);
             final String deviceName = device.getName();
             if (deviceName != null && deviceName.length() > 0)
                 viewHolder.deviceName.setText(deviceName);
