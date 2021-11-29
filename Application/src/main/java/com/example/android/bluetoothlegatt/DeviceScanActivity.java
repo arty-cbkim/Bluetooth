@@ -202,7 +202,7 @@ public class DeviceScanActivity extends ListActivity {
             }, SCAN_PERIOD);
 
             // 스캔 시작
-            Log.d(TAG,"디바이스 스캔 시작");
+            Log.d(TAG,"디바이스 스캔 시작중...");
             mScanning = true;
             mBluetoothAdapter.startLeScan(mLeScanCallback);
         } else {
